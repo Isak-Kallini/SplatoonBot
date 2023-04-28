@@ -45,7 +45,7 @@ public class Main extends ListenerAdapter {
         }
         try {
             connect = DriverManager
-                    .getConnection("jdbc:mysql://localhost/BridgeFour?"
+                    .getConnection("jdbc:mysql://localhost/bridgefour?"
                             + "user=root&password=" + password);
         } catch (SQLException e) {
             ErrorLogger.log(e);
@@ -154,7 +154,7 @@ public class Main extends ListenerAdapter {
 
     public static void events(SlashCommandInteractionEvent event) throws SQLException {
         resultSet = statement
-                .executeQuery("SELECT DISTINCT event FROM BridgeFour.matches");
+                .executeQuery("SELECT DISTINCT event FROM bridgefour.matches");
         String result = "";
         while(resultSet.next()){
             result += resultSet.getString("event") + "\n";
@@ -167,17 +167,17 @@ public class Main extends ListenerAdapter {
 
     public static void stats(SlashCommandInteractionEvent event) throws SQLException {
         resultSet = statement
-                .executeQuery("SELECT COUNT(DISTINCT team) FROM BridgeFour.matches");
+                .executeQuery("SELECT COUNT(DISTINCT team) FROM bridgefour.matches");
         resultSet.next();
         int nteams = resultSet.getInt("COUNT(DISTINCT team)");
 
         resultSet = statement
-                .executeQuery("SELECT COUNT(team) FROM BridgeFour.matches");
+                .executeQuery("SELECT COUNT(team) FROM bridgefour.matches");
         resultSet.next();
         int nmatches = resultSet.getInt("COUNT(team)");
 
         resultSet = statement
-                .executeQuery("SELECT * FROM BridgeFour.matches");
+                .executeQuery("SELECT * FROM bridgefour.matches");
 
         int wins = 0;
         int losses = 0;
@@ -217,7 +217,7 @@ public class Main extends ListenerAdapter {
         String e = event.getOption("event", null, OptionMapping::getAsString);
         if(e != null) {
             resultSet = statement
-                    .executeQuery("SELECT * FROM BridgeFour.matches WHERE event LIKE'%" + e + "%'");
+                    .executeQuery("SELECT * FROM bridgefour.matches WHERE event LIKE'%" + e + "%'");
         }
 
         if(resultSet.next()) {
@@ -241,10 +241,10 @@ public class Main extends ListenerAdapter {
         String team = event.getOption("team", null, OptionMapping::getAsString);
         if(team == null) {
             resultSet = statement
-                    .executeQuery("select * from BridgeFour.matches");
+                    .executeQuery("select * from bridgefour.matches");
         }else{
             resultSet = statement
-                    .executeQuery("SELECT * FROM BridgeFour.matches WHERE team LIKE '%" + team + "%'");
+                    .executeQuery("SELECT * FROM bridgefour.matches WHERE team LIKE '%" + team + "%'");
         }
 
         if(resultSet.next()) {
