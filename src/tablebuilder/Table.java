@@ -45,12 +45,12 @@ public class Table {
                 maxLengthEvent = length;
             }
         }
-        String result = "| Date       | w-l | Team" + spaces(maxLengthTeam - 4) + " | Event" + spaces(maxLengthEvent - 5) + " |\n" +
-                        "-------------------------" + dashes(maxLengthTeam - 4) + "--------" + dashes(maxLengthEvent - 5) + "--\n";
+        String result = "|Date      |w-l|Team" + spaces(maxLengthTeam - 4) + "|Event" + spaces(maxLengthEvent - 5) + "|\n" +
+                        "---------------------" + dashes(maxLengthTeam - 4) + "------" + dashes(maxLengthEvent - 5) + "\n";
 
         for(int i = start; i < Math.min(start + 10, event.size()); i++){
-            result += "| " + date.get(i) + " | " + we.get(i) + "-" + them.get(i) + " | " + team.get(i) + spaces(maxLengthTeam - team.get(i).length()) +
-                    " | " + event.get(i) + spaces(maxLengthEvent - event.get(i).length()) + " |\n";
+            result += "|" + date.get(i) + "|" + we.get(i) + "-" + them.get(i) + "|" + team.get(i) + spaces(maxLengthTeam - team.get(i).length()) +
+                    "|" + event.get(i) + spaces(maxLengthEvent - event.get(i).length()) + "|\n";
         }
         return result;
     }

@@ -96,6 +96,11 @@ public class Main extends ListenerAdapter {
                 Commands.slash("events", "All events we've played")
         );
 
+        commands.addCommands(
+                Commands.slash("blacklist", "Add team to blacklist/show blacklist")
+                        .addOptions(new OptionData(STRING, "team", "Team you want to blacklist"))
+        );
+
         commands.queue();
         try {
             jda.awaitReady();
@@ -127,9 +132,33 @@ public class Main extends ListenerAdapter {
                     return;
                 case "register":
                     register(event);
+                    return;
+                case "blacklist":
+                    blacklist(event);
             }
         }catch (SQLException e) {
             ErrorLogger.log(e);
+        }
+    }
+
+    public static void blacklist(SlashCommandInteractionEvent event) throws SQLException {
+        String team = event.getOption("team", null, OptionMapping::getAsString);
+
+        if(team == null){
+            resultSet = statement.executeQuery("SELECT * from bridgefour.blacklist");
+            String result = "";
+            while(resultSet.next()){
+                result += resultSet.getString("team") + "\n";
+            }
+            MessageEmbed embed = new EmbedBuilder()
+                    .setTitle("Blacklist")
+                    .setDescription(result).build();
+            event.replyEmbeds(embed).queue();
+        }else{
+            PreparedStatement stmnt = connect.prepareStatement("INSERT INTO bridgefour.blacklist VALUES (default, ?);");
+            stmnt.setString(1, team);
+            stmnt.executeUpdate();
+            event.reply(team + " added to blacklist").queue();
         }
     }
 
@@ -201,7 +230,7 @@ public class Main extends ListenerAdapter {
 
     public static void teams(SlashCommandInteractionEvent event) throws SQLException {
         resultSet = statement
-                .executeQuery("SELECT DISTINCT team FROM BridgeFour.matches");
+                .executeQuery("SELECT DISTINCT team FROM bridgefour.matches");
         String result = "";
         while(resultSet.next()){
             result += resultSet.getString("team") + "\n";
@@ -216,8 +245,10 @@ public class Main extends ListenerAdapter {
     public static void event(SlashCommandInteractionEvent event) throws SQLException {
         String e = event.getOption("event", null, OptionMapping::getAsString);
         if(e != null) {
-            resultSet = statement
-                    .executeQuery("SELECT * FROM bridgefour.matches WHERE event LIKE'%" + e + "%'");
+            PreparedStatement stmnt = connect.prepareStatement("SELECT * FROM bridgefour.matches WHERE event LIKE ?");
+            stmnt.setString(1, "%" + e + "%");
+            resultSet = stmnt
+                    .executeQuery();
         }
 
         if(resultSet.next()) {
@@ -243,9 +274,11 @@ public class Main extends ListenerAdapter {
             resultSet = statement
                     .executeQuery("select * from bridgefour.matches");
         }else{
-            resultSet = statement
-                    .executeQuery("SELECT * FROM bridgefour.matches WHERE team LIKE '%" + team + "%'");
+            PreparedStatement stmnt = connect.prepareStatement("SELECT * FROM bridgefour.matches WHERE team LIKE ?");
+            stmnt.setString(1, "%" + team + "%");
+            resultSet = stmnt.executeQuery();
         }
+        //'; DROP TABLE bridgefour.test; --
 
         if(resultSet.next()) {
             viewtable = new Table(resultSet);
@@ -253,7 +286,7 @@ public class Main extends ListenerAdapter {
             MessageEmbed embed = new EmbedBuilder()
                     .setTitle("Viewing " + (team == null? "all":team))
                     .setDescription("```" + viewtable.table() + "```")
-                    .setFooter("Viewing 1 to " + viewtable.end).build();
+                    .setFooter("Viewing 1 to " + viewtable.end  + " of " + viewtable.size).build();
 
             event.replyEmbeds(embed).addActionRow(Button.primary("previous", "previous"),
                     Button.primary("next", "next"),
@@ -263,26 +296,26 @@ public class Main extends ListenerAdapter {
         }
     }
 
-    public void editViewMessage(ButtonInteractionEvent event, String desc){
+    public void editViewMessage(ButtonInteractionEvent event, String desc, Table t){
         String title = event.getMessage().getEmbeds().get(0).getTitle();
         event.editMessageEmbeds(new EmbedBuilder()
                 .setTitle(title)
                 .setDescription(desc)
-                .setFooter("Viewing " + (viewtable.start + 1) + " to " + viewtable.end + " of " + viewtable.size).build()).queue();
+                .setFooter("Viewing " + (t.start + 1) + " to " + t.end + " of " + t.size).build()).queue();
     }
 
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event){
-        Table table = event.getComponentId().endsWith("e") ? eventTable:viewtable;
+        Table table = event.getComponentId().endsWith("e") ? eventTable : viewtable;
         if(event.getComponentId().startsWith("next")){
             editViewMessage(event,
-                    "```" + table.next() + "```");
+                    "```" + table.next() + "```", table);
         }else if(event.getComponentId().startsWith("previous")){
             editViewMessage(event,
-                    "```" + table.previous() + "```");
+                    "```" + table.previous() + "```", table);
         }else if(event.getComponentId().startsWith("end")){
             editViewMessage(event,
-                    "```" + table.end() + "```");
+                    "```" + table.end() + "```", table);
         }
     }
 }
