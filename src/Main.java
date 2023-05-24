@@ -6,6 +6,7 @@ import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
 
+import ConnectionPooling.BasicConnectionPool;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -24,9 +25,7 @@ import tablebuilder.Table;
 import static net.dv8tion.jda.api.interactions.commands.OptionType.*;
 
 public class Main extends ListenerAdapter {
-    private static JDA jda;
-    private static Connection connect = null;
-    private static Statement statement = null;
+    private static BasicConnectionPool connectionPool = null;
     private static ResultSet resultSet = null;
     public static void main(String[] args) {
         String token = null;
@@ -44,19 +43,12 @@ public class Main extends ListenerAdapter {
             ErrorLogger.log(e);
         }
         try {
-            connect = DriverManager
-                    .getConnection("jdbc:mysql://localhost/bridgefour?"
-                            + "user=root&password=" + password);
-        } catch (SQLException e) {
-            ErrorLogger.log(e);
-        }
-        try {
-            statement = connect.createStatement();
+            connectionPool = BasicConnectionPool.create("jdbc:mysql://localhost/bridgefour", "splatoonbot@localhost", password);
         } catch (SQLException e) {
             ErrorLogger.log(e);
         }
 
-        jda = JDABuilder.createLight(token, EnumSet.noneOf(GatewayIntent.class))
+        JDA jda = JDABuilder.createLight(token, EnumSet.noneOf(GatewayIntent.class))
                 .addEventListeners(new Main())
                 .build();
         CommandListUpdateAction commands = jda.updateCommands();
@@ -114,27 +106,14 @@ public class Main extends ListenerAdapter {
         if (event.getGuild() == null)
             return;
         try {
-        switch (event.getName()) {
-                case "view":
-                    view(event);
-                    return;
-                case "teams":
-                    teams(event);
-                    return;
-                case "event":
-                    event(event);
-                    return;
-                case "stats":
-                    stats(event);
-                    return;
-                case "events":
-                    events(event);
-                    return;
-                case "register":
-                    register(event);
-                    return;
-                case "blacklist":
-                    blacklist(event);
+            switch (event.getName()) {
+                case "view" -> view(event);
+                case "teams" -> teams(event);
+                case "event" -> event(event);
+                case "stats" -> stats(event);
+                case "events" -> events(event);
+                case "register" -> register(event);
+                case "blacklist" -> blacklist(event);
             }
         }catch (SQLException e) {
             ErrorLogger.log(e);
@@ -143,7 +122,8 @@ public class Main extends ListenerAdapter {
 
     public static void blacklist(SlashCommandInteractionEvent event) throws SQLException {
         String team = event.getOption("team", null, OptionMapping::getAsString);
-
+        Connection connect = connectionPool.getConnection();
+        Statement statement = connect.createStatement();
         if(team == null){
             resultSet = statement.executeQuery("SELECT * from bridgefour.blacklist");
             String result = "";
@@ -160,6 +140,7 @@ public class Main extends ListenerAdapter {
             stmnt.executeUpdate();
             event.reply(team + " added to blacklist").queue();
         }
+        connectionPool.releaseConnection(connect);
     }
 
     public static void register(SlashCommandInteractionEvent event) throws SQLException {
@@ -170,6 +151,8 @@ public class Main extends ListenerAdapter {
         String date = event.getOption("date", c.get(Calendar.YEAR) + "-" + (c.get(Calendar.MONTH) + 1) + "-" + c.get(Calendar.DAY_OF_MONTH), OptionMapping::getAsString);
         String e = event.getOption("event", "Scrim", OptionMapping::getAsString);
 
+
+        Connection connect = connectionPool.getConnection();
         PreparedStatement stmnt = connect.prepareStatement("INSERT INTO matches VALUES (default, ?, ?, ?, ?, ?);");
         System.out.println(date);
         stmnt.setDate(1, java.sql.Date.valueOf(date));
@@ -178,10 +161,13 @@ public class Main extends ListenerAdapter {
         stmnt.setInt(4, them);
         stmnt.setString(5, e);
         stmnt.executeUpdate();
-        event.reply("Registered").queue();
+        event.reply("Registered " + we + "-" + them + " " + team).queue();
+        connectionPool.releaseConnection(connect);
     }
 
     public static void events(SlashCommandInteractionEvent event) throws SQLException {
+        Connection connect = connectionPool.getConnection();
+        Statement statement = connect.createStatement();
         resultSet = statement
                 .executeQuery("SELECT DISTINCT event FROM bridgefour.matches");
         String result = "";
@@ -192,9 +178,12 @@ public class Main extends ListenerAdapter {
                 .setTitle("Events")
                 .setDescription(result).build();
         event.replyEmbeds(embed).queue();
+        connectionPool.releaseConnection(connect);
     }
 
     public static void stats(SlashCommandInteractionEvent event) throws SQLException {
+        Connection connect = connectionPool.getConnection();
+        Statement statement = connect.createStatement();
         resultSet = statement
                 .executeQuery("SELECT COUNT(DISTINCT team) FROM bridgefour.matches");
         resultSet.next();
@@ -226,9 +215,12 @@ public class Main extends ListenerAdapter {
                         "Losses: " + losses + "\n" +
                         "Win/lose ratio: " + ((float) wins/losses)).build();
         event.replyEmbeds(embed).queue();
+        connectionPool.releaseConnection(connect);
     }
 
     public static void teams(SlashCommandInteractionEvent event) throws SQLException {
+        Connection connect = connectionPool.getConnection();
+        Statement statement = connect.createStatement();
         resultSet = statement
                 .executeQuery("SELECT DISTINCT team FROM bridgefour.matches");
         String result = "";
@@ -239,10 +231,12 @@ public class Main extends ListenerAdapter {
                 .setTitle("Teams")
                 .setDescription(result).build();
         event.replyEmbeds(embed).queue();
+        connectionPool.releaseConnection(connect);
     }
 
     private static Table eventTable;
     public static void event(SlashCommandInteractionEvent event) throws SQLException {
+        Connection connect = connectionPool.getConnection();
         String e = event.getOption("event", null, OptionMapping::getAsString);
         if(e != null) {
             PreparedStatement stmnt = connect.prepareStatement("SELECT * FROM bridgefour.matches WHERE event LIKE ?");
@@ -265,10 +259,13 @@ public class Main extends ListenerAdapter {
         }else{
             event.reply("Couldn't find '" + e + "'").queue();
         }
+        connectionPool.releaseConnection(connect);
     }
 
     private static Table viewtable;
     public static void view(SlashCommandInteractionEvent event) throws SQLException {
+        Connection connect = connectionPool.getConnection();
+        Statement statement = connect.createStatement();
         String team = event.getOption("team", null, OptionMapping::getAsString);
         if(team == null) {
             resultSet = statement
@@ -294,6 +291,7 @@ public class Main extends ListenerAdapter {
         }else{
             event.reply("Couldn't find '" + team + "'").queue();
         }
+        connectionPool.releaseConnection(connect);
     }
 
     public void editViewMessage(ButtonInteractionEvent event, String desc, Table t){
