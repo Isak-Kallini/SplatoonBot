@@ -5,12 +5,14 @@ import java.sql.*;
 import java.util.Calendar;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
+import java.util.List;
 
 import ConnectionPooling.BasicConnectionPool;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.Role;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -31,7 +33,7 @@ public class Main extends ListenerAdapter {
         String token = null;
         String password = null;
         try {
-            token = Files.readString(Paths.get("spltoken.txt")).trim();
+            token = Files.readString(Paths.get("token.txt")).trim();
             password = Files.readString(Paths.get("pass.txt")).trim();
         } catch (IOException e) {
             ErrorLogger.log(e);
@@ -59,7 +61,7 @@ public class Main extends ListenerAdapter {
         );
 
         commands.addCommands(
-                Commands.slash("register", "Toggle if the bot should send daily quotes")
+                Commands.slash("register", "Register a new match (only team members)")
                         .addOptions(new OptionData(STRING, "team", "Enemy team name")
                                 .setRequired(true))
                         .addOptions(new OptionData(INTEGER, "we", "Our score")
@@ -135,34 +137,51 @@ public class Main extends ListenerAdapter {
                     .setDescription(result).build();
             event.replyEmbeds(embed).queue();
         }else{
-            PreparedStatement stmnt = connect.prepareStatement("INSERT INTO bridgefour.blacklist VALUES (default, ?);");
-            stmnt.setString(1, team);
-            stmnt.executeUpdate();
-            event.reply(team + " added to blacklist").queue();
+            if(isTeamMember(event.getMember().getRoles())) {
+                PreparedStatement stmnt = connect.prepareStatement("INSERT INTO bridgefour.blacklist VALUES (default, ?);");
+                stmnt.setString(1, team);
+                stmnt.executeUpdate();
+                event.reply(team + " added to blacklist").queue();
+            }else{
+                event.reply("Only team members can add teams to the blacklist").queue();
+            }
         }
         connectionPool.releaseConnection(connect);
     }
 
+    private static boolean isTeamMember(List<Role> roles){
+        for(Role r: roles){
+            if(r.getName().equals("Team")){
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void register(SlashCommandInteractionEvent event) throws SQLException {
-        String team = event.getOption("team", null, OptionMapping::getAsString);
-        int we = event.getOption("we", 0, OptionMapping::getAsInt);
-        int them = event.getOption("them", 0, OptionMapping::getAsInt);
-        Calendar c = new GregorianCalendar();
-        String date = event.getOption("date", c.get(Calendar.YEAR) + "-" + (c.get(Calendar.MONTH) + 1) + "-" + c.get(Calendar.DAY_OF_MONTH), OptionMapping::getAsString);
-        String e = event.getOption("event", "Scrim", OptionMapping::getAsString);
+        if(isTeamMember(event.getMember().getRoles())) {
+            String team = event.getOption("team", null, OptionMapping::getAsString);
+            int we = event.getOption("we", 0, OptionMapping::getAsInt);
+            int them = event.getOption("them", 0, OptionMapping::getAsInt);
+            Calendar c = new GregorianCalendar();
+            String date = event.getOption("date", c.get(Calendar.YEAR) + "-" + (c.get(Calendar.MONTH) + 1) + "-" + c.get(Calendar.DAY_OF_MONTH), OptionMapping::getAsString);
+            String e = event.getOption("event", "Scrim", OptionMapping::getAsString);
 
 
-        Connection connect = connectionPool.getConnection();
-        PreparedStatement stmnt = connect.prepareStatement("INSERT INTO matches VALUES (default, ?, ?, ?, ?, ?);");
-        System.out.println(date);
-        stmnt.setDate(1, java.sql.Date.valueOf(date));
-        stmnt.setString(2, team);
-        stmnt.setInt(3, we);
-        stmnt.setInt(4, them);
-        stmnt.setString(5, e);
-        stmnt.executeUpdate();
-        event.reply("Registered " + we + "-" + them + " " + team).queue();
-        connectionPool.releaseConnection(connect);
+            Connection connect = connectionPool.getConnection();
+            PreparedStatement stmnt = connect.prepareStatement("INSERT INTO matches VALUES (default, ?, ?, ?, ?, ?);");
+            System.out.println(date);
+            stmnt.setDate(1, java.sql.Date.valueOf(date));
+            stmnt.setString(2, team);
+            stmnt.setInt(3, we);
+            stmnt.setInt(4, them);
+            stmnt.setString(5, e);
+            stmnt.executeUpdate();
+            event.reply("Registered " + we + "-" + them + " " + team).queue();
+            connectionPool.releaseConnection(connect);
+        }else{
+            event.reply("Matches can only be registered by team members").queue();
+        }
     }
 
     public static void events(SlashCommandInteractionEvent event) throws SQLException {
