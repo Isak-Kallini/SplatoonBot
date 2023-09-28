@@ -1,11 +1,13 @@
 package tablebuilder;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class Table {
-
+    ArrayList<Integer> id = new ArrayList<>();
     ArrayList<String> date = new ArrayList<>();
     ArrayList<String> team = new ArrayList<>();
     ArrayList<Integer> we = new ArrayList<>();
@@ -18,6 +20,7 @@ public class Table {
 
     public Table(ResultSet s) throws SQLException {
         do{
+            id.add(s.getInt("id"));
             date.add(s.getString("datum"));
             team.add(s.getString("team"));
             we.add(s.getInt("we"));
@@ -45,11 +48,16 @@ public class Table {
                 maxLengthEvent = length;
             }
         }
-        String result = "|Date      |w-l|Team" + spaces(maxLengthTeam - 4) + "|Event" + spaces(maxLengthEvent - 5) + "|\n" +
-                        "---------------------" + dashes(maxLengthTeam - 4) + "------" + dashes(maxLengthEvent - 5) + "\n";
+        String result = getString(maxLengthTeam, maxLengthEvent);
+        return result;
+    }
+
+    private String getString(int maxLengthTeam, int maxLengthEvent) {
+        String result = spaces(1) + "|Date      |w-l|Team" + spaces(maxLengthTeam - 4) + "|Event" + spaces(maxLengthEvent - 5) + "|\n" +
+                        "----------------------" + dashes(maxLengthTeam - 4) + "------" + dashes(maxLengthEvent - 5) + "\n";
 
         for(int i = start; i < Math.min(start + 10, event.size()); i++){
-            result += "|" + date.get(i) + "|" + we.get(i) + "-" + them.get(i) + "|" + team.get(i) + spaces(maxLengthTeam - team.get(i).length()) +
+            result += id.get(i) + "|" + date.get(i) + "|" + we.get(i) + "-" + them.get(i) + "|" + team.get(i) + spaces(maxLengthTeam - team.get(i).length()) +
                     "|" + event.get(i) + spaces(maxLengthEvent - event.get(i).length()) + "|\n";
         }
         return result;
