@@ -63,6 +63,12 @@ public class Table {
         return result;
     }
 
+    public String start(){
+        start = 0;
+        end = 10;
+        return table();
+    }
+
     public String next(){
         if(start + 10 < size)
             start += 10;
