@@ -48,7 +48,7 @@ public class Main extends ListenerAdapter {
         }
 
         discordBot.Main.initialise(connectionPool);
-
+        
     }
 }
 

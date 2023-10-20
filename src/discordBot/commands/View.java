@@ -42,14 +42,14 @@ public class View extends Command implements HasTable {
 
             MessageEmbed embed = new EmbedBuilder()
                     .setTitle("Viewing " + (team == null? "all":team))
-                    .setDescription("```" + table.table() + "```")
+                    .setDescription(table.table())
                     .setFooter("Viewing 1 to " + table.end  + " of " + table.size).build();
 
             event.replyEmbeds(embed).addActionRow(
+                    Button.primary(getName() + " start", "start"),
                     Button.primary(getName() + " previous", "previous"),
                     Button.primary(getName() + " next", "next"),
-                    Button.primary(getName() + " end", "end"),
-                    Button.primary(getName() + " start", "start")).queue();
+                    Button.primary(getName() + " end", "end")).queue();
         }else{
             event.reply("Couldn't find '" + team + "'").queue();
         }
