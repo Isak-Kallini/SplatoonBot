@@ -48,12 +48,11 @@ public class Table {
                 maxLengthEvent = length;
             }
         }
-        String result = getString(maxLengthTeam, maxLengthEvent);
-        return result;
+        return "```" + getString(maxLengthTeam, maxLengthEvent) + "```";
     }
 
     private String getString(int maxLengthTeam, int maxLengthEvent) {
-        String result = spaces(1) + "|Date      |w-l|Team" + spaces(maxLengthTeam - 4) + "|Event" + spaces(maxLengthEvent - 5) + "|\n" +
+        String result = "id " + "|Date      |w-l|Team" + spaces(maxLengthTeam - 4) + "|Event" + spaces(maxLengthEvent - 5) + "|\n" +
                         "----------------------" + dashes(maxLengthTeam - 4) + "------" + dashes(maxLengthEvent - 5) + "\n";
 
         for(int i = start; i < Math.min(start + 10, event.size()); i++){
