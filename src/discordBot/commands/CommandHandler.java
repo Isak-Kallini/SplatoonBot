@@ -1,9 +1,11 @@
 package discordBot.commands;
 
 import discordBot.ErrorLogger;
+import discordBot.scheduling.ScheduleEmbed;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ScanResult;
+import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -19,7 +21,10 @@ import static discordBot.Util.editViewMessage;
 
 public class CommandHandler extends ListenerAdapter {
     static Map<String, Command> commandMap = new HashMap<>();
+    static ScheduleEmbed scheduleEmbed;
     public static void init(CommandListUpdateAction commands){
+
+
         var classGraph = new ClassGraph().acceptPackages("discordBot.commands");
         try(ScanResult result = classGraph.scan()){
             ClassInfoList list = result.getSubclasses(Command.class);
@@ -39,6 +44,12 @@ public class CommandHandler extends ListenerAdapter {
         }
     }
 
+
+    public static void scheduleThing(JDA jda){
+        scheduleEmbed = new ScheduleEmbed();
+        scheduleEmbed.schedule(jda);
+    }
+
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event){
         if (event.getGuild() == null)
@@ -53,13 +64,17 @@ public class CommandHandler extends ListenerAdapter {
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event){
         String[] s = event.getComponentId().split(" ");
-        Command c = commandMap.get(s[0]);
-        String func = s[1];
-        switch (func) {
-            case "start" -> ((HasTable) c).start(event);
-            case "next" -> ((HasTable) c).next(event);
-            case "previous" -> ((HasTable) c).previous(event);
-            case "end" -> ((HasTable) c).end(event);
+        if(s[0].equals("schedule")){
+            scheduleEmbed.update(event);
+        }else {
+            Command c = commandMap.get(s[0]);
+            String func = s[1];
+            switch (func) {
+                case "start" -> ((HasTable) c).start(event);
+                case "next" -> ((HasTable) c).next(event);
+                case "previous" -> ((HasTable) c).previous(event);
+                case "end" -> ((HasTable) c).end(event);
+            }
         }
     }
 }
