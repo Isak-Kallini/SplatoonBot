@@ -34,7 +34,6 @@ public class ScheduleEmbed {
                 cal.add(Calendar.DAY_OF_YEAR, 7);
                 cal.set(Calendar.HOUR_OF_DAY, 19);
 
-                c.sendMessage(cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.ENGLISH) + " <t:" + (cal.getTimeInMillis()/1000) + ":R>").queue();
 
                 MessageEmbed embed = new EmbedBuilder()
                         .setTitle(cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.ENGLISH) + " <t:" + (cal.getTimeInMillis()/1000) + ":R>")
