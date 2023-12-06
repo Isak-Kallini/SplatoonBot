@@ -87,7 +87,7 @@ public class ScheduleEmbed {
 
         String username = event.getUser().getEffectiveName();
         switch (id) {
-            case "✅" -> {
+            case "\u2705" -> {
                 if (!thingie.get(0).contains(username)) {
                     thingie.get(0).add(username);
                     thingie.get(1).remove(username);
@@ -105,7 +105,7 @@ public class ScheduleEmbed {
                     m.removeReaction(Emoji.fromUnicode("U+274C"), event.getUser()).complete();
                 }
             }
-            case "❌" -> {
+            case "\u274C" -> {
                 if (!thingie.get(2).contains(username)) {
                     thingie.get(2).add(username);
                     thingie.get(1).remove(username);
