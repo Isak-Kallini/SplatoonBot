@@ -50,7 +50,7 @@ public class Register extends Command{
             stmnt.setInt(4, them);
             stmnt.setString(5, e);
             stmnt.executeUpdate();
-            event.reply("Registered " + we + "-" + them + " " + team).queue();
+            event.reply("Registered " + we + "-" + them + " " + team + " " + e + " " + date).queue();
             connectionPool.releaseConnection(connect);
         }else{
             event.reply("Matches can only be registered by team members").queue();
