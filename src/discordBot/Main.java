@@ -33,7 +33,7 @@ public class Main {
             ErrorLogger.log(e);
         }
 
-        JDA jda = JDABuilder.createLight(token, EnumSet.noneOf(GatewayIntent.class))
+        JDA jda = JDABuilder.createLight(token, EnumSet.of(GatewayIntent.GUILD_MESSAGE_REACTIONS, GatewayIntent.GUILD_MESSAGES))
                 .addEventListeners(new CommandHandler())
                 .build();
 

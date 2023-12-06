@@ -8,9 +8,12 @@ import io.github.classgraph.ScanResult;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
+import org.jetbrains.annotations.NotNull;
 import tablebuilder.Table;
 
 import java.util.HashMap;
@@ -75,6 +78,13 @@ public class CommandHandler extends ListenerAdapter {
                 case "previous" -> ((HasTable) c).previous(event);
                 case "end" -> ((HasTable) c).end(event);
             }
+        }
+    }
+
+    @Override
+    public void onMessageReactionAdd(MessageReactionAddEvent event){
+        if(!event.getUser().isBot()) {
+            scheduleEmbed.update(event);
         }
     }
 }

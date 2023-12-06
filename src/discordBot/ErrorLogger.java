@@ -13,7 +13,7 @@ public class ErrorLogger {
     private static final Path filePath = FileSystems.getDefault().getPath("log/log" + timeToLogFormat(new GregorianCalendar()) + ".txt");
 
     public static void log(Exception e){
-        StringWriter sw = new StringWriter();
+        /*StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         e.printStackTrace(pw);
         try {
@@ -22,7 +22,7 @@ public class ErrorLogger {
             e.printStackTrace();
         } catch (IOException ex) {
             ex.printStackTrace();
-        }
+        }*/
     }
 
     public static String timeToLogFormat(Calendar c){
@@ -35,7 +35,7 @@ public class ErrorLogger {
     }
 
     public static void deleteOldLogs(){
-        try {
+        /*try {
             DirectoryStream stream = Files.newDirectoryStream(FileSystems.getDefault().getPath("log"));
             ArrayList<String> logFiles = new ArrayList<>();
             stream.forEach(e -> {
@@ -49,6 +49,6 @@ public class ErrorLogger {
             }
         } catch (IOException e) {
             log(e);
-        }
+        }*/
     }
 }
