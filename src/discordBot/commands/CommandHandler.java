@@ -67,13 +67,17 @@ public class CommandHandler extends ListenerAdapter {
     @Override
     public void onButtonInteraction(ButtonInteractionEvent event){
         String[] s = event.getComponentId().split(" ");
-        Command c = commandMap.get(s[0]);
-        String func = s[1];
-        switch (func) {
-            case "start" -> ((HasTable) c).start(event);
-            case "next" -> ((HasTable) c).next(event);
-            case "previous" -> ((HasTable) c).previous(event);
-            case "end" -> ((HasTable) c).end(event);
+        if(s[0].equals("schedule")){
+            scheduleEmbed.update(event);
+        }else {
+            Command c = commandMap.get(s[0]);
+            String func = s[1];
+            switch (func) {
+                case "start" -> ((HasTable) c).start(event);
+                case "next" -> ((HasTable) c).next(event);
+                case "previous" -> ((HasTable) c).previous(event);
+                case "end" -> ((HasTable) c).end(event);
+            }
         }
     }
 

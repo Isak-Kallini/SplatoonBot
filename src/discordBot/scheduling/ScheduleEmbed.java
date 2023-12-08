@@ -125,4 +125,48 @@ public class ScheduleEmbed {
         m.editMessageEmbeds(embed).queue();
 
     }
+
+    public void update(ButtonInteractionEvent event){
+        String[] list = event.getMessage().getEmbeds().get(0).getDescription().split("\n");
+        List<ArrayList<String>> thingie = Arrays.stream(list).map(s -> new ArrayList<>(List.of(s.split(" ")))).toList();
+        thingie.forEach(l -> {
+            l.remove(0);
+            l.removeIf(String::isEmpty);
+            try{
+                System.out.println(l.get(1).isEmpty() + ":" + l.get(1));
+            }catch(Exception ignored){
+
+            }
+        });
+        System.out.println(thingie);
+        String id = event.getComponentId();
+        String username = event.getUser().getEffectiveName();
+        if(event.getComponentId().equals("schedule yes")){
+            if(!thingie.get(0).contains(username)) {
+                thingie.get(0).add(username);
+                thingie.get(1).remove(username);
+                thingie.get(2).remove(username);
+            }
+        }else if(id.equals("schedule maybe")) {
+            if(!thingie.get(1).contains(username)) {
+                thingie.get(1).add(username);
+                thingie.get(0).remove(username);
+                thingie.get(2).remove(username);
+            }
+        }else if(id.equals("schedule no")){
+            if(!thingie.get(2).contains(username)) {
+                thingie.get(2).add(username);
+                thingie.get(1).remove(username);
+                thingie.get(0).remove(username);
+            }
+        }
+
+        MessageEmbed embed = new EmbedBuilder()
+                .setTitle(event.getMessage().getEmbeds().get(0).getTitle())
+                .setDescription(":white_check_mark:: " +
+                        thingie.get(0).stream().reduce("", (a, b) -> a + " " + b) + "\n" +
+                        thingie.get(1).stream().reduce("", (a, b) -> a + " " + b) + "\n" +
+                        thingie.get(2).stream().reduce("", (a, b) -> a + " " + b)).build();
+        event.editMessageEmbeds(embed).queue();
+    }
 }
