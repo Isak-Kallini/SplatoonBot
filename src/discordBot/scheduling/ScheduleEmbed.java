@@ -17,10 +17,11 @@ public class ScheduleEmbed {
     TextChannel c;
     Calendar cal = new GregorianCalendar();
 
+
     public void schedule(JDA jda){
         //private: 396332195360276484
         //public: 1166399862615588944
-        c = jda.getTextChannelById("1166399862615588944");
+        c = jda.getTextChannelById("396332195360276484");
 
         Calendar calendar = new GregorianCalendar();
         calendar.set(Calendar.HOUR_OF_DAY, 8);
@@ -65,7 +66,11 @@ public class ScheduleEmbed {
             message.addReaction(Emoji.fromUnicode("U+2705")).queue();
             message.addReaction(Emoji.fromUnicode("U+1F7E8")).queue();
             message.addReaction(Emoji.fromUnicode("U+274C")).queue();
-        });*/
+        });
+
+        ScheduleReminder reminder = new ScheduleReminder(jda);
+        reminder.addReminder(c.getLatestMessageId());
+        reminder.remindToReact(c.getLatestMessageId());*/
     }
 
     public void update(GenericMessageReactionEvent event){
@@ -128,8 +133,8 @@ public class ScheduleEmbed {
 
     public void update(ButtonInteractionEvent event){
         String[] list = event.getMessage().getEmbeds().get(0).getDescription().split("\n");
-        List<ArrayList<String>> thingie = Arrays.stream(list).map(s -> new ArrayList<>(List.of(s.split(" ")))).toList();
-        thingie.forEach(l -> {
+        List<ArrayList<String>> reactions = Arrays.stream(list).map(s -> new ArrayList<>(List.of(s.split(" ")))).toList();
+        reactions.forEach(l -> {
             l.remove(0);
             l.removeIf(String::isEmpty);
             try{
@@ -138,35 +143,34 @@ public class ScheduleEmbed {
 
             }
         });
-        System.out.println(thingie);
         String id = event.getComponentId();
         String username = event.getUser().getEffectiveName();
         if(event.getComponentId().equals("schedule yes")){
-            if(!thingie.get(0).contains(username)) {
-                thingie.get(0).add(username);
-                thingie.get(1).remove(username);
-                thingie.get(2).remove(username);
+            if(!reactions.get(0).contains(username)) {
+                reactions.get(0).add(username);
+                reactions.get(1).remove(username);
+                reactions.get(2).remove(username);
             }
         }else if(id.equals("schedule maybe")) {
-            if(!thingie.get(1).contains(username)) {
-                thingie.get(1).add(username);
-                thingie.get(0).remove(username);
-                thingie.get(2).remove(username);
+            if(!reactions.get(1).contains(username)) {
+                reactions.get(1).add(username);
+                reactions.get(0).remove(username);
+                reactions.get(2).remove(username);
             }
         }else if(id.equals("schedule no")){
-            if(!thingie.get(2).contains(username)) {
-                thingie.get(2).add(username);
-                thingie.get(1).remove(username);
-                thingie.get(0).remove(username);
+            if(!reactions.get(2).contains(username)) {
+                reactions.get(2).add(username);
+                reactions.get(1).remove(username);
+                reactions.get(0).remove(username);
             }
         }
 
         MessageEmbed embed = new EmbedBuilder()
                 .setTitle(event.getMessage().getEmbeds().get(0).getTitle())
                 .setDescription(":white_check_mark:: " +
-                        thingie.get(0).stream().reduce("", (a, b) -> a + " " + b) + "\n" +
-                        thingie.get(1).stream().reduce("", (a, b) -> a + " " + b) + "\n" +
-                        thingie.get(2).stream().reduce("", (a, b) -> a + " " + b)).build();
+                        reactions.get(0).stream().reduce("", (a, b) -> a + " " + b) + "\n" +
+                        reactions.get(1).stream().reduce("", (a, b) -> a + " " + b) + "\n" +
+                        reactions.get(2).stream().reduce("", (a, b) -> a + " " + b)).build();
         event.editMessageEmbeds(embed).queue();
     }
 }
